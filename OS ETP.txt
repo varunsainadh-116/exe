@@ -1,0 +1,1675 @@
+#Produe a multiplication table.
+sol.
+#!/bin/bash
+
+# Check if the user provided a number as an argument
+if [ "$#" -eq 0 ]; then
+  echo "Usage: $0 <number>"
+  exit 1
+fi
+
+number=$1
+
+echo "Multiplication Table for $number:"
+echo "--------------------------------"
+
+for ((i=1; i<=10; i++)); do
+  result=$((number * i))
+  echo "$number x $i = $result"
+done
+
+*********************************************************************************************************************
+
+#write a shell script program to implement a small calculatore.
+sol.
+#!/bin/bash
+
+# Function to perform addition
+addition() {
+  result=$(echo "$1 + $2" | bc)
+  echo "Result: $result"
+}
+
+# Function to perform subtraction
+subtraction() {
+  result=$(echo "$1 - $2" | bc)
+  echo "Result: $result"
+}
+
+# Function to perform multiplication
+multiplication() {
+  result=$(echo "$1 * $2" | bc)
+  echo "Result: $result"
+}
+
+# Function to perform division
+division() {
+  if [ "$2" -eq 0 ]; then
+    echo "Error: Division by zero is undefined."
+  else
+    result=$(echo "scale=2; $1 / $2" | bc)
+    echo "Result: $result"
+  fi
+}
+
+# Check if the user provided three arguments: operator and two numbers
+if [ "$#" -ne 3 ]; then
+  echo "Usage: $0 <operator> <operand1> <operand2>"
+  exit 1
+fi
+
+operator=$1
+operand1=$2
+operand2=$3
+
+case "$operator" in
+  "+")
+    addition "$operand1" "$operand2"
+    ;;
+  "-")
+    subtraction "$operand1" "$operand2"
+    ;;
+  "*")
+    multiplication "$operand1" "$operand2"
+    ;;
+  "/")
+    division "$operand1" "$operand2"
+    ;;
+  *)
+    echo "Error: Invalid operator. Supported operators are +, -, *, /"
+    exit 1
+    ;;
+esac
+*********************************************************************************************************************
+
+#wite a shell script to display prime number up to given limit.
+sol.
+#!/bin/bash
+
+# Function to check if a number is prime
+is_prime() {
+  number=$1
+  if [ "$number" -lt 2 ]; then
+    return 1  # Not prime
+  fi
+
+  for ((i=2; i*i<=number; i++)); do
+    if [ "$((number % i))" -eq 0 ]; then
+      return 1  # Not prime
+    fi
+  done
+
+  return 0  # Prime
+}
+
+# Check if the user provided a limit as an argument
+if [ "$#" -eq 0 ]; then
+  echo "Usage: $0 <limit>"
+  exit 1
+fi
+
+limit=$1
+
+echo "Prime numbers up to $limit:"
+echo "----------------------------"
+
+for ((num=2; num<=limit; num++)); do
+  if is_prime "$num"; then
+    echo "$num"
+  fi
+done
+
+****************************************************************************************************************
+
+#create a program using system calls to copy either the first half or second half of a file into a new file in c program.
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+void copyFirstHalf(int input_fd, int output_fd, off_t file_size) {
+    off_t half_size = file_size / 2;
+    char buffer[4096];
+    ssize_t bytes_read, bytes_written;
+    off_t total_bytes_read = 0;
+
+    while (total_bytes_read < half_size) {
+        bytes_read = read(input_fd, buffer, sizeof(buffer));
+        if (bytes_read <= 0) {
+            break;
+        }
+
+        bytes_written = write(output_fd, buffer, bytes_read);
+        if (bytes_written != bytes_read) {
+            perror("Write error");
+            exit(EXIT_FAILURE);
+        }
+
+        total_bytes_read += bytes_read;
+    }
+}
+
+void copySecondHalf(int input_fd, int output_fd, off_t file_size) {
+    off_t half_size = file_size / 2;
+    off_t remaining_size = file_size - half_size;
+    char buffer[4096];
+    ssize_t bytes_read, bytes_written;
+    off_t total_bytes_read = 0;
+
+    // Seek to the beginning of the second half
+    lseek(input_fd, half_size, SEEK_SET);
+
+    while (total_bytes_read < remaining_size) {
+        bytes_read = read(input_fd, buffer, sizeof(buffer));
+        if (bytes_read <= 0) {
+            break;
+        }
+
+        bytes_written = write(output_fd, buffer, bytes_read);
+        if (bytes_written != bytes_read) {
+            perror("Write error");
+            exit(EXIT_FAILURE);
+        }
+
+        total_bytes_read += bytes_read;
+    }
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 4) {
+        fprintf(stderr, "Usage: %s <input_file> <output_file> <first_half|second_half>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    const char *input_file = argv[1];
+    const char *output_file = argv[2];
+    const char *option = argv[3];
+
+    int input_fd = open(input_file, O_RDONLY);
+    if (input_fd == -1) {
+        perror("Error opening input file");
+        exit(EXIT_FAILURE);
+    }
+
+    // Get the size of the input file
+    struct stat stat_buf;
+    if (fstat(input_fd, &stat_buf) == -1) {
+        perror("Error getting file size");
+        exit(EXIT_FAILURE);
+    }
+    off_t file_size = stat_buf.st_size;
+
+    int output_fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    if (output_fd == -1) {
+        perror("Error opening output file");
+        exit(EXIT_FAILURE);
+    }
+
+    if (strcmp(option, "first_half") == 0) {
+        copyFirstHalf(input_fd, output_fd, file_size);
+    } else if (strcmp(option, "second_half") == 0) {
+        copySecondHalf(input_fd, output_fd, file_size);
+    } else {
+        fprintf(stderr, "Invalid option. Use 'first_half' or 'second_half'\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Close file descriptors
+    close(input_fd);
+    close(output_fd);
+
+    printf("File copy successful.\n");
+
+    return 0;
+}
+
+
+
+************************************************************************************************************************************************
+
+#develop a program using system call to read input from the console until user input '$', and then save the input into a file.
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#define BUFFER_SIZE 4096
+
+int main() {
+    char buffer[BUFFER_SIZE];
+    ssize_t bytes_read;
+
+    // Open the file for writing
+    int output_fd = open("output.txt", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    if (output_fd == -1) {
+        perror("Error opening output file");
+        exit(EXIT_FAILURE);
+    }
+
+    // Read input from the console until '$' is encountered
+    while ((bytes_read = read(STDIN_FILENO, buffer, sizeof(buffer))) > 0) {
+        // Write the input to the file
+        if (write(output_fd, buffer, bytes_read) != bytes_read) {
+            perror("Write error");
+            exit(EXIT_FAILURE);
+        }
+
+        // Check if '$' is in the input and break the loop if found
+        if (memchr(buffer, '$', bytes_read) != NULL) {
+            break;
+        }
+    }
+
+    // Close the output file
+    close(output_fd);
+
+    printf("Input saved to 'output.txt'\n");
+
+    return 0;
+}
+
+
+**************************************************************************************************************************************
+
+#design a program using system calls to read the contents of a file without using a char aaray and display the contents directly on the console.please refrain from using built-in function like sizeof() and strlen().
+sol.
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#define BUFFER_SIZE 4096
+
+int main() {
+    // Open the file for reading
+    int input_fd = open("input.txt", O_RDONLY);
+    if (input_fd == -1) {
+        perror("Error opening input file");
+        return 1;
+    }
+
+    // Read and display the contents of the file
+    char buffer[BUFFER_SIZE];
+    ssize_t bytes_read;
+
+    while ((bytes_read = read(input_fd, buffer, sizeof(buffer))) > 0) {
+        // Write the buffer directly to the console
+        if (write(STDOUT_FILENO, buffer, bytes_read) != bytes_read) {
+            perror("Write error");
+            return 1;
+        }
+    }
+
+    // Close the input file
+    close(input_fd);
+
+    return 0;
+}
+
+
+*****************************************************************************************************************************************************+
+
+#write a program using directory system call to make a new directory on the desktop, then create a file inside that directory, and finnaly, list the content of the directory.
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <dirent.h>
+
+int main() {
+    // Specify the directory name and file name
+    const char *directory_name = "Desktop/new_directory";
+    const char *file_name = "Desktop/new_directory/new_file.txt";
+
+    // Create a new directory on the desktop
+    if (mkdir(directory_name, 0777) == -1) {
+        perror("Error creating directory");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Directory created: %s\n", directory_name);
+
+    // Create a file inside the new directory
+    int file_fd = open(file_name, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+    if (file_fd == -1) {
+        perror("Error creating file");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("File created: %s\n", file_name);
+
+    // Close the file
+    close(file_fd);
+
+    // List the contents of the new directory
+    DIR *dir = opendir(directory_name);
+    if (dir == NULL) {
+        perror("Error opening directory");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Contents of the directory %s:\n", directory_name);
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        printf("%s\n", entry->d_name);
+    }
+
+    // Close the directory
+    closedir(dir);
+
+    return 0;
+}
+
+
+******************************************************************************************************************************
+
+#develop a program using directory and file manipulation systemcall to copy the contents of one directory into newly created directory.
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <dirent.h>
+#include <string.h>
+
+// Function to recursively copy the contents of a source directory to a destination directory
+void copyDirectory(const char *src_dir, const char *dest_dir) {
+    DIR *dir = opendir(src_dir);
+    if (dir == NULL) {
+        perror("Error opening source directory");
+        exit(EXIT_FAILURE);
+    }
+
+    // Create the destination directory if it doesn't exist
+    mkdir(dest_dir, 0777);
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+            char src_path[256];
+            char dest_path[256];
+
+            // Create full paths for the source and destination
+            snprintf(src_path, sizeof(src_path), "%s/%s", src_dir, entry->d_name);
+            snprintf(dest_path, sizeof(dest_path), "%s/%s", dest_dir, entry->d_name);
+
+            if (entry->d_type == DT_DIR) {
+                // Recursively copy subdirectories
+                copyDirectory(src_path, dest_path);
+            } else {
+                // Copy files
+                int src_fd = open(src_path, O_RDONLY);
+                if (src_fd == -1) {
+                    perror("Error opening source file");
+                    exit(EXIT_FAILURE);
+                }
+
+                int dest_fd = open(dest_path, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+                if (dest_fd == -1) {
+                    perror("Error creating destination file");
+                    exit(EXIT_FAILURE);
+                }
+
+                char buffer[4096];
+                ssize_t bytes_read, bytes_written;
+
+                while ((bytes_read = read(src_fd, buffer, sizeof(buffer))) > 0) {
+                    bytes_written = write(dest_fd, buffer, bytes_read);
+                    if (bytes_written != bytes_read) {
+                        perror("Write error");
+                        exit(EXIT_FAILURE);
+                    }
+                }
+
+                // Close file descriptors
+                close(src_fd);
+                close(dest_fd);
+            }
+        }
+    }
+
+    // Close the source directory
+    closedir(dir);
+}
+
+int main() {
+    const char *source_directory = "source_directory";
+    const char *destination_directory = "new_directory";
+
+    // Create a new directory to copy contents into
+    mkdir(destination_directory, 0777);
+
+    printf("New directory created: %s\n", destination_directory);
+
+    // Copy the contents of the source directory into the new directory
+    copyDirectory(source_directory, destination_directory);
+
+    printf("Contents of %s copied to %s\n", source_directory, destination_directory);
+
+    return 0;
+}
+
+**************************************************************************************************************************
+
+#write a program using system call opertaion on process to simulate that n fork calls create(2^n-1)child process.
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+void createChildProcesses(int n) {
+    int i;
+    pid_t child_pid;
+
+    for (i = 0; i < n; ++i) {
+        child_pid = fork();
+
+        if (child_pid == -1) {
+            perror("fork");
+            exit(EXIT_FAILURE);
+        }
+
+        if (child_pid == 0) {
+            // Child process
+            printf("Child process %d (PID %d) created\n", i + 1, getpid());
+            break;
+        }
+    }
+
+    // Print the total number of processes
+    if (child_pid != 0) {
+        int total_processes = (1 << n) - 1;
+        printf("Total processes created: %d\n", total_processes);
+    }
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <number_of_forks>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    int n = atoi(argv[1]);
+
+    if (n < 0) {
+        fprintf(stderr, "Error: Number of forks must be non-negative.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    createChildProcesses(n);
+
+    return 0;
+}
+
+*****************************************************************************************************************************
+
+#write a program using system call for opertaion on process to create a hierarchy of process p1->p2->p3. Also print the id and parent id for each process.
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+
+int main() {
+    pid_t p1, p2, p3;
+
+    // Process p1
+    p1 = getpid();
+    printf("p1 (PID: %d, PPID: %d) created\n", p1, getppid());
+
+    // Fork to create p2
+    p2 = fork();
+
+    if (p2 == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (p2 == 0) {
+        // Process p2 (child of p1)
+        printf("p2 (PID: %d, PPID: %d) created\n", getpid(), getppid());
+
+        // Fork to create p3
+        p3 = fork();
+
+        if (p3 == -1) {
+            perror("fork");
+            exit(EXIT_FAILURE);
+        }
+
+        if (p3 == 0) {
+            // Process p3 (child of p2)
+            printf("p3 (PID: %d, PPID: %d) created\n", getpid(), getppid());
+        }
+    } else {
+        // Process p1 (parent of p2)
+        wait(NULL);  // Wait for p2 to finish
+        printf("p1 (PID: %d) finished\n", getpid());
+    }
+
+    return 0;
+}
+
+***********************************************************************************************************************************
+
+#write a program using system call for opertaion on process to create a hierarchy of process as given in previous question. Also simulate process p4 as orphan and p5 as zombie.
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+int main() {
+    pid_t p1, p2, p3, p4, p5;
+
+    // Process p1
+    p1 = getpid();
+    printf("p1 (PID: %d, PPID: %d) created\n", p1, getppid());
+
+    // Fork to create p2
+    p2 = fork();
+
+    if (p2 == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (p2 == 0) {
+        // Process p2 (child of p1)
+        printf("p2 (PID: %d, PPID: %d) created\n", getpid(), getppid());
+
+        // Fork to create p3
+        p3 = fork();
+
+        if (p3 == -1) {
+            perror("fork");
+            exit(EXIT_FAILURE);
+        }
+
+        if (p3 == 0) {
+            // Process p3 (child of p2)
+            printf("p3 (PID: %d, PPID: %d) created\n", getpid(), getppid());
+        }
+    } else {
+        // Process p1 (parent of p2)
+        wait(NULL);  // Wait for p2 to finish
+        printf("p1 (PID: %d) finished\n", getpid());
+    }
+
+    // Fork to create p4 (orphan process)
+    p4 = fork();
+
+    if (p4 == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (p4 == 0) {
+        // Process p4 (orphan)
+        printf("p4 (PID: %d, PPID: %d) created (orphan)\n", getpid(), getppid());
+
+        // Sleep to become an orphan
+        sleep(2);
+
+        printf("p4 (PID: %d, PPID: %d) adopted by init\n", getpid(), getppid());
+    } else {
+        // Process p1 (parent of p4)
+        waitpid(p4, NULL, WNOHANG);  // Don't wait for p4 to finish
+        printf("p1 (PID: %d) continuing\n", getpid());
+    }
+
+    // Fork to create p5 (zombie process)
+    p5 = fork();
+
+    if (p5 == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (p5 == 0) {
+        // Process p5 (zombie)
+        printf("p5 (PID: %d, PPID: %d) created (zombie)\n", getpid(), getppid());
+        exit(EXIT_SUCCESS);
+    } else {
+        // Process p1 (parent of p5)
+        sleep(1);  // Wait for p5 to become a zombie
+        printf("p1 (PID: %d) continuing\n", getpid());
+    }
+
+    return 0;
+}
+
+
+****************************************************************************************************************
+
+#write a program using system call for opertaion on process to create a hierarchy of process 2. Also,simulate P4 as an orphan process and p7 as a zombie.
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+int main() {
+    pid_t p1, p2, p3, p4, p5, p6, p7;
+
+    // Process p1
+    p1 = getpid();
+    printf("p1 (PID: %d, PPID: %d) created\n", p1, getppid());
+
+    // Fork to create p2
+    p2 = fork();
+
+    if (p2 == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (p2 == 0) {
+        // Process p2 (child of p1)
+        printf("p2 (PID: %d, PPID: %d) created\n", getpid(), getppid());
+
+        // Fork to create p3
+        p3 = fork();
+
+        if (p3 == -1) {
+            perror("fork");
+            exit(EXIT_FAILURE);
+        }
+
+        if (p3 == 0) {
+            // Process p3 (child of p2)
+            printf("p3 (PID: %d, PPID: %d) created\n", getpid(), getppid());
+
+            // Fork to create p4
+            p4 = fork();
+
+            if (p4 == -1) {
+                perror("fork");
+                exit(EXIT_FAILURE);
+            }
+
+            if (p4 == 0) {
+                // Process p4 (child of p3)
+                printf("p4 (PID: %d, PPID: %d) created (orphan)\n", getpid(), getppid());
+
+                // Sleep to become an orphan
+                sleep(2);
+
+                printf("p4 (PID: %d, PPID: %d) adopted by init\n", getpid(), getppid());
+            }
+        } else {
+            // Process p2 (parent of p3)
+            waitpid(p3, NULL, 0);  // Wait for p3 to finish
+            printf("p2 (PID: %d) continuing\n", getpid());
+        }
+    } else {
+        // Process p1 (parent of p2)
+        waitpid(p2, NULL, 0);  // Wait for p2 to finish
+        printf("p1 (PID: %d) continuing\n", getpid());
+    }
+
+    // Fork to create p5
+    p5 = fork();
+
+    if (p5 == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (p5 == 0) {
+        // Process p5 (child of p1)
+        printf("p5 (PID: %d, PPID: %d) created\n", getpid(), getppid());
+
+        // Fork to create p6
+        p6 = fork();
+
+        if (p6 == -1) {
+            perror("fork");
+            exit(EXIT_FAILURE);
+        }
+
+        if (p6 == 0) {
+            // Process p6 (child of p5)
+            printf("p6 (PID: %d, PPID: %d) created\n", getpid(), getppid());
+        } else {
+            // Process p5 (parent of p6)
+            waitpid(p6, NULL, 0);  // Wait for p6 to finish
+            printf("p5 (PID: %d) continuing\n", getpid());
+        }
+    } else {
+        // Process p1 (parent of p5)
+        waitpid(p5, NULL, 0);  // Wait for p5 to finish
+        printf("p1 (PID: %d) continuing\n", getpid());
+    }
+
+    // Fork to create p7 (zombie process)
+    p7 = fork();
+
+    if (p7 == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (p7 == 0) {
+        // Process p7 (zombie)
+        printf("p7 (PID: %d, PPID: %d) created (zombie)\n", getpid(), getppid());
+        exit(EXIT_SUCCESS);
+    } else {
+        // Process p1 (parent of p7)
+        sleep(1);  // Wait for p7 to become a zombie
+        printf("p1 (PID: %d) continuing\n", getpid());
+    }
+
+    return 0;
+}
+
+
+****************************************************************************************************************************************
+
+#write a program using pthred to concenate the string, where multiple strings are passed to thread function.
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <string.h>
+
+#define MAX_STR_LEN 100
+
+// Structure to pass data to the thread function
+struct ThreadData {
+    char result[MAX_STR_LEN * 10];  // Buffer for the concatenated string
+    pthread_mutex_t mutex;          // Mutex for synchronization
+};
+
+// Thread function to concatenate strings
+void *concatenateStrings(void *data) {
+    struct ThreadData *threadData = (struct ThreadData *)data;
+
+    // Concatenate the strings
+    pthread_mutex_lock(&threadData->mutex);
+    strcat(threadData->result, (char *)data);
+    pthread_mutex_unlock(&threadData->mutex);
+
+    pthread_exit(NULL);
+}
+
+int main() {
+    pthread_t threads[5];  // Assuming 5 strings to concatenate
+    struct ThreadData threadData;
+    int i;
+
+    // Initialize the mutex
+    pthread_mutex_init(&threadData.mutex, NULL);
+
+    // Initialize the result buffer
+    threadData.result[0] = '\0';
+
+    // Strings to concatenate
+    char strings[5][MAX_STR_LEN] = {"Hello", ", ", "world", "!", "\n"};
+
+    // Create threads for each string
+    for (i = 0; i < 5; ++i) {
+        if (pthread_create(&threads[i], NULL, concatenateStrings, (void *)strings[i]) != 0) {
+            perror("pthread_create");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Wait for all threads to finish
+    for (i = 0; i < 5; ++i) {
+        if (pthread_join(threads[i], NULL) != 0) {
+            perror("pthread_join");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Print the concatenated string
+    printf("Concatenated String: %s", threadData.result);
+
+    // Destroy the mutex
+    pthread_mutex_destroy(&threadData.mutex);
+
+    return 0;
+}
+
+
+*****************************************************************************************************************************
+
+#write a program using pthred to  find the length of string,where strings are passed to thread function.
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <string.h>
+
+#define MAX_STR_LEN 100
+
+// Structure to pass data to the thread function
+struct ThreadData {
+    char *str;            // String to find the length
+    size_t length;        // Length of the string
+    pthread_mutex_t mutex; // Mutex for synchronization
+};
+
+// Thread function to find the length of a string
+void *findStringLength(void *data) {
+    struct ThreadData *threadData = (struct ThreadData *)data;
+
+    // Calculate the length of the string
+    pthread_mutex_lock(&threadData->mutex);
+    threadData->length = strlen(threadData->str);
+    pthread_mutex_unlock(&threadData->mutex);
+
+    pthread_exit(NULL);
+}
+
+int main() {
+    pthread_t threads[5];  // Assuming 5 strings
+    struct ThreadData threadData[5];
+    int i;
+
+    // Initialize mutex for each thread
+    for (i = 0; i < 5; ++i) {
+        pthread_mutex_init(&threadData[i].mutex, NULL);
+    }
+
+    // Strings for which we want to find the length
+    char strings[5][MAX_STR_LEN] = {"Hello", "world", "from", "pthread", "!\n"};
+
+    // Create threads for each string
+    for (i = 0; i < 5; ++i) {
+        threadData[i].str = strings[i];
+
+        if (pthread_create(&threads[i], NULL, findStringLength, (void *)&threadData[i]) != 0) {
+            perror("pthread_create");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Wait for all threads to finish
+    for (i = 0; i < 5; ++i) {
+        if (pthread_join(threads[i], NULL) != 0) {
+            perror("pthread_join");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Print the lengths of the strings
+    for (i = 0; i < 5; ++i) {
+        printf("Length of \"%s\": %zu\n", threadData[i].str, threadData[i].length);
+    }
+
+    // Destroy the mutex for each thread
+    for (i = 0; i < 5; ++i) {
+        pthread_mutex_destroy(&threadData[i].mutex);
+    }
+
+    return 0;
+}
+
+
+****************************************************************************************************************************
+
+#write a program that pefrom statical operations of calcutaing the average, maximum and minimum for set of number. create three threads where each performs their respective operations.
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+
+#define NUMBERS_COUNT 10
+
+// Structure to pass data to the thread functions
+struct ThreadData {
+    int numbers[NUMBERS_COUNT]; // Set of numbers
+    double average;             // Average of the numbers
+    int maximum;                // Maximum of the numbers
+    int minimum;                // Minimum of the numbers
+    pthread_mutex_t mutex;      // Mutex for synchronization
+};
+
+// Thread function to calculate the average of numbers
+void *calculateAverage(void *data) {
+    struct ThreadData *threadData = (struct ThreadData *)data;
+
+    pthread_mutex_lock(&threadData->mutex);
+    for (int i = 0; i < NUMBERS_COUNT; ++i) {
+        threadData->average += threadData->numbers[i];
+    }
+    threadData->average /= NUMBERS_COUNT;
+    pthread_mutex_unlock(&threadData->mutex);
+
+    pthread_exit(NULL);
+}
+
+// Thread function to calculate the maximum of numbers
+void *calculateMaximum(void *data) {
+    struct ThreadData *threadData = (struct ThreadData *)data;
+
+    pthread_mutex_lock(&threadData->mutex);
+    for (int i = 0; i < NUMBERS_COUNT; ++i) {
+        if (threadData->numbers[i] > threadData->maximum) {
+            threadData->maximum = threadData->numbers[i];
+        }
+    }
+    pthread_mutex_unlock(&threadData->mutex);
+
+    pthread_exit(NULL);
+}
+
+// Thread function to calculate the minimum of numbers
+void *calculateMinimum(void *data) {
+    struct ThreadData *threadData = (struct ThreadData *)data;
+
+    pthread_mutex_lock(&threadData->mutex);
+    for (int i = 0; i < NUMBERS_COUNT; ++i) {
+        if (threadData->numbers[i] < threadData->minimum) {
+            threadData->minimum = threadData->numbers[i];
+        }
+    }
+    pthread_mutex_unlock(&threadData->mutex);
+
+    pthread_exit(NULL);
+}
+
+int main() {
+    pthread_t threads[3];  // One thread for each statistical operation
+    struct ThreadData threadData;
+    int i;
+
+    // Initialize the mutex
+    pthread_mutex_init(&threadData.mutex, NULL);
+
+    // Initialize the set of numbers
+    printf("Enter %d numbers:\n", NUMBERS_COUNT);
+    for (i = 0; i < NUMBERS_COUNT; ++i) {
+        scanf("%d", &threadData.numbers[i]);
+    }
+
+    // Initialize statistical values
+    threadData.average = 0.0;
+    threadData.maximum = threadData.numbers[0];
+    threadData.minimum = threadData.numbers[0];
+
+    // Create threads for each statistical operation
+    if (pthread_create(&threads[0], NULL, calculateAverage, (void *)&threadData) != 0 ||
+        pthread_create(&threads[1], NULL, calculateMaximum, (void *)&threadData) != 0 ||
+        pthread_create(&threads[2], NULL, calculateMinimum, (void *)&threadData) != 0) {
+        perror("pthread_create");
+        exit(EXIT_FAILURE);
+    }
+
+    // Wait for all threads to finish
+    for (i = 0; i < 3; ++i) {
+        if (pthread_join(threads[i], NULL) != 0) {
+            perror("pthread_join");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Print the results
+    printf("Average: %.2f\n", threadData.average);
+    printf("Maximum: %d\n", threadData.maximum);
+    printf("Minimum: %d\n", threadData.minimum);
+
+    // Destroy the mutex
+    pthread_mutex_destroy(&threadData.mutex);
+
+    return 0;
+}
+
+
+************************************************************************************************************************
+
+#write a multithread program where an array of integers is passed globally and is divide into two smaller lists and given as input to two thread. the thread will sort thire half of the list and will pass the sorted list to a third thread which merges and sort the list. the final sorted list is printed by the parent thread.
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+
+#define ARRAY_SIZE 10
+
+// Structure to pass data to the threads
+struct ThreadData {
+    int *array; // Array of integers
+    int size;   // Size of the array
+};
+
+// Thread function to sort a portion of the array
+void *sortArray(void *data) {
+    struct ThreadData *threadData = (struct ThreadData *)data;
+
+    // Simple bubble sort for demonstration purposes
+    for (int i = 0; i < threadData->size - 1; ++i) {
+        for (int j = 0; j < threadData->size - i - 1; ++j) {
+            if (threadData->array[j] > threadData->array[j + 1]) {
+                // Swap elements if they are in the wrong order
+                int temp = threadData->array[j];
+                threadData->array[j] = threadData->array[j + 1];
+                threadData->array[j + 1] = temp;
+            }
+        }
+    }
+
+    pthread_exit(NULL);
+}
+
+// Thread function to merge and sort two halves of the array
+void *mergeAndSort(void *data) {
+    struct ThreadData *threadData = (struct ThreadData *)data;
+
+    // Simple merge for demonstration purposes
+    int mid = threadData->size / 2;
+    int *tempArray = (int *)malloc(threadData->size * sizeof(int));
+
+    int i = 0, j = mid, k = 0;
+
+    while (i < mid && j < threadData->size) {
+        if (threadData->array[i] < threadData->array[j]) {
+            tempArray[k++] = threadData->array[i++];
+        } else {
+            tempArray[k++] = threadData->array[j++];
+        }
+    }
+
+    while (i < mid) {
+        tempArray[k++] = threadData->array[i++];
+    }
+
+    while (j < threadData->size) {
+        tempArray[k++] = threadData->array[j++];
+    }
+
+    // Copy the merged and sorted array back to the original array
+    for (i = 0; i < threadData->size; ++i) {
+        threadData->array[i] = tempArray[i];
+    }
+
+    free(tempArray);
+
+    pthread_exit(NULL);
+}
+
+int main() {
+    int array[ARRAY_SIZE] = {5, 2, 9, 1, 5, 6, 3, 8, 7, 4};
+    pthread_t threads[3];
+    struct ThreadData threadData[3];
+
+    // Initialize the thread data
+    for (int i = 0; i < 3; ++i) {
+        threadData[i].array = array;
+        threadData[i].size = ARRAY_SIZE;
+    }
+
+    // Create threads for sorting each half of the array
+    for (int i = 0; i < 2; ++i) {
+        if (pthread_create(&threads[i], NULL, sortArray, (void *)&threadData[i]) != 0) {
+            perror("pthread_create");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Wait for the sorting threads to finish
+    for (int i = 0; i < 2; ++i) {
+        if (pthread_join(threads[i], NULL) != 0) {
+            perror("pthread_join");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Create a thread to merge and sort the two halves
+    if (pthread_create(&threads[2], NULL, mergeAndSort, (void *)&threadData[2]) != 0) {
+        perror("pthread_create");
+        exit(EXIT_FAILURE);
+    }
+
+    // Wait for the merging and sorting thread to finish
+    if (pthread_join(threads[2], NULL) != 0) {
+        perror("pthread_join");
+        exit(EXIT_FAILURE);
+    }
+
+    // Print the final sorted array
+    printf("Sorted Array: ");
+    for (int i = 0; i < ARRAY_SIZE; ++i) {
+        printf("%d ", array[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
+
+
+****************************************************************************************************************************
+
+#implement the producer consumer problem using pthread and mutex operations. Test Cases: (A) A producer only produces if buffer is empty and consumer only consumes if some xontent is in the buffer.
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+
+#define BUFFER_SIZE 5
+
+// Structure to represent the shared buffer
+struct SharedBuffer {
+    int buffer[BUFFER_SIZE];
+    int count; // Number of items in the buffer
+    pthread_mutex_t mutex; // Mutex for synchronization
+    pthread_cond_t producer_condition; // Condition variable for the producer
+    pthread_cond_t consumer_condition; // Condition variable for the consumer
+};
+
+// Initialize the shared buffer
+void initializeBuffer(struct SharedBuffer *sharedBuffer) {
+    sharedBuffer->count = 0;
+    pthread_mutex_init(&sharedBuffer->mutex, NULL);
+    pthread_cond_init(&sharedBuffer->producer_condition, NULL);
+    pthread_cond_init(&sharedBuffer->consumer_condition, NULL);
+}
+
+// Function to add an item to the buffer (producer)
+void produce(struct SharedBuffer *sharedBuffer, int item) {
+    pthread_mutex_lock(&sharedBuffer->mutex);
+
+    // Wait for the buffer to have space
+    while (sharedBuffer->count == BUFFER_SIZE) {
+        printf("Buffer is full. Producer is waiting.\n");
+        pthread_cond_wait(&sharedBuffer->producer_condition, &sharedBuffer->mutex);
+    }
+
+    // Produce an item
+    sharedBuffer->buffer[sharedBuffer->count++] = item;
+    printf("Produced item: %d\n", item);
+
+    // Signal the consumer that an item is ready
+    pthread_cond_signal(&sharedBuffer->consumer_condition);
+
+    pthread_mutex_unlock(&sharedBuffer->mutex);
+}
+
+// Function to remove an item from the buffer (consumer)
+int consume(struct SharedBuffer *sharedBuffer) {
+    pthread_mutex_lock(&sharedBuffer->mutex);
+
+    // Wait for the buffer to have content
+    while (sharedBuffer->count == 0) {
+        printf("Buffer is empty. Consumer is waiting.\n");
+        pthread_cond_wait(&sharedBuffer->consumer_condition, &sharedBuffer->mutex);
+    }
+
+    // Consume an item
+    int item = sharedBuffer->buffer[--sharedBuffer->count];
+    printf("Consumed item: %d\n", item);
+
+    // Signal the producer that space is available
+    pthread_cond_signal(&sharedBuffer->producer_condition);
+
+    pthread_mutex_unlock(&sharedBuffer->mutex);
+
+    return item;
+}
+
+// Producer thread function
+void *producer(void *arg) {
+    struct SharedBuffer *sharedBuffer = (struct SharedBuffer *)arg;
+
+    for (int i = 1; i <= 10; ++i) {
+        produce(sharedBuffer, i);
+        sleep(1); // Simulate some work by sleeping
+    }
+
+    pthread_exit(NULL);
+}
+
+// Consumer thread function
+void *consumer(void *arg) {
+    struct SharedBuffer *sharedBuffer = (struct SharedBuffer *)arg;
+
+    for (int i = 0; i < 10; ++i) {
+        int item = consume(sharedBuffer);
+        sleep(2); // Simulate some work by sleeping
+    }
+
+    pthread_exit(NULL);
+}
+
+int main() {
+    pthread_t producerThread, consumerThread;
+    struct SharedBuffer sharedBuffer;
+
+    // Initialize the shared buffer
+    initializeBuffer(&sharedBuffer);
+
+    // Create producer and consumer threads
+    if (pthread_create(&producerThread, NULL, producer, (void *)&sharedBuffer) != 0 ||
+        pthread_create(&consumerThread, NULL, consumer, (void *)&sharedBuffer) != 0) {
+        perror("pthread_create");
+        exit(EXIT_FAILURE);
+    }
+
+    // Wait for the threads to finish
+    if (pthread_join(producerThread, NULL) != 0 || pthread_join(consumerThread, NULL) != 0) {
+        perror("pthread_join");
+        exit(EXIT_FAILURE);
+    }
+
+    // Clean up and exit
+    pthread_mutex_destroy(&sharedBuffer.mutex);
+    pthread_cond_destroy(&sharedBuffer.producer_condition);
+    pthread_cond_destroy(&sharedBuffer.consumer_condition);
+
+    return 0;
+}
+
+*************************************************************************************************************************
+
+#implement the reader write problem using semaphore and mutex operatopns to synchoronize n reader active in reader section at same if n reader time, and one write active at a time. (a)if n reader are active no write.
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
+
+#define NUM_READERS 3
+#define NUM_WRITERS 2
+
+// Structure to represent the shared resource
+struct SharedResource {
+    int data;
+    int readers_count;
+    pthread_mutex_t mutex;
+    sem_t reader_sem;
+    sem_t writer_sem;
+};
+
+// Initialize the shared resource
+void initializeResource(struct SharedResource *resource) {
+    resource->data = 0;
+    resource->readers_count = 0;
+    pthread_mutex_init(&resource->mutex, NULL);
+    sem_init(&resource->reader_sem, 0, 1); // Binary semaphore for readers
+    sem_init(&resource->writer_sem, 0, 1); // Binary semaphore for writers
+}
+
+// Reader thread function
+void *reader(void *arg) {
+    struct SharedResource *resource = (struct SharedResource *)arg;
+
+    while (1) {
+        sem_wait(&resource->reader_sem); // Wait for access to the readers count
+        pthread_mutex_lock(&resource->mutex);
+        resource->readers_count++;
+        if (resource->readers_count == 1) {
+            sem_wait(&resource->writer_sem); // Wait for no writers
+        }
+        pthread_mutex_unlock(&resource->mutex);
+        sem_post(&resource->reader_sem); // Release access to the readers count
+
+        // Reading the shared data
+        printf("Reader %ld reads data: %d\n", (long)pthread_self(), resource->data);
+        sleep(1);
+
+        sem_wait(&resource->reader_sem); // Wait for access to the readers count
+        pthread_mutex_lock(&resource->mutex);
+        resource->readers_count--;
+        if (resource->readers_count == 0) {
+            sem_post(&resource->writer_sem); // Allow writers
+        }
+        pthread_mutex_unlock(&resource->mutex);
+        sem_post(&resource->reader_sem); // Release access to the readers count
+
+        // Simulate some processing time
+        sleep(1);
+    }
+
+    pthread_exit(NULL);
+}
+
+// Writer thread function
+void *writer(void *arg) {
+    struct SharedResource *resource = (struct SharedResource *)arg;
+    int newData = 1;
+
+    while (1) {
+        sem_wait(&resource->writer_sem); // Wait for no readers or writers
+
+        // Writing to the shared data
+        printf("Writer %ld writes data: %d\n", (long)pthread_self(), newData);
+        resource->data = newData;
+        newData++;
+
+        sem_post(&resource->writer_sem); // Allow readers and writers
+
+        // Simulate some processing time
+        sleep(2);
+    }
+
+    pthread_exit(NULL);
+}
+
+int main() {
+    pthread_t readerThreads[NUM_READERS];
+    pthread_t writerThreads[NUM_WRITERS];
+    struct SharedResource sharedResource;
+
+    // Initialize the shared resource
+    initializeResource(&sharedResource);
+
+    // Create reader threads
+    for (int i = 0; i < NUM_READERS; ++i) {
+        if (pthread_create(&readerThreads[i], NULL, reader, (void *)&sharedResource) != 0) {
+            perror("pthread_create");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Create writer threads
+    for (int i = 0; i < NUM_WRITERS; ++i) {
+        if (pthread_create(&writerThreads[i], NULL, writer, (void *)&sharedResource) != 0) {
+            perror("pthread_create");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Wait for the threads to finish (Note: This will never happen as the threads run indefinitely)
+    for (int i = 0; i < NUM_READERS; ++i) {
+        if (pthread_join(readerThreads[i], NULL) != 0) {
+            perror("pthread_join");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    for (int i = 0; i < NUM_WRITERS; ++i) {
+        if (pthread_join(writerThreads[i], NULL) != 0) {
+            perror("pthread_join");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Clean up and exit
+    pthread_mutex_destroy(&sharedResource.mutex);
+    sem_destroy(&sharedResource.reader_sem);
+    sem_destroy(&sharedResource.writer_sem);
+
+    return 0;
+}
+
+****************************************************************************************************************************
+
+#implement IPC using named pipes concept.
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#define FIFO_PATH "my_fifo"
+
+void create_named_pipe() {
+    // Create a named pipe
+    if (mkfifo(FIFO_PATH, 0666) == -1) {
+        perror("mkfifo");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void write_to_pipe() {
+    int fd;
+
+    // Open the named pipe for writing
+    if ((fd = open(FIFO_PATH, O_WRONLY)) == -1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+
+    // Write data to the named pipe
+    char message[] = "Hello from the writer!";
+    if (write(fd, message, sizeof(message)) == -1) {
+        perror("write");
+        exit(EXIT_FAILURE);
+    }
+
+    // Close the pipe
+    close(fd);
+}
+
+void read_from_pipe() {
+    int fd;
+
+    // Open the named pipe for reading
+    if ((fd = open(FIFO_PATH, O_RDONLY)) == -1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+
+    // Read data from the named pipe
+    char buffer[100];
+    ssize_t bytesRead;
+    if ((bytesRead = read(fd, buffer, sizeof(buffer))) == -1) {
+        perror("read");
+        exit(EXIT_FAILURE);
+    }
+
+    // Null-terminate the string
+    buffer[bytesRead] = '\0';
+
+    // Print the received message
+    printf("Received message: %s\n", buffer);
+
+    // Close the pipe
+    close(fd);
+}
+
+int main() {
+    create_named_pipe();
+
+    pid_t pid = fork();
+
+    if (pid == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    } else if (pid > 0) {
+        // Parent process (writer)
+        write_to_pipe();
+    } else {
+        // Child process (reader)
+        read_from_pipe();
+    }
+
+    // Remove the named pipe
+    if (unlink(FIFO_PATH) == -1) {
+        perror("unlink");
+        exit(EXIT_FAILURE);
+    }
+
+    return 0;
+}
+
+****************************************************************************************************************
+
+#implement IPC using message passing concept.
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+
+#define MESSAGE_QUEUE_KEY 1234
+#define MESSAGE_SIZE 50
+
+struct Message {
+    long messageType;
+    char text[MESSAGE_SIZE];
+};
+
+void send_message(int msgid, const char *messageText, long messageType) {
+    struct Message msg;
+    msg.messageType = messageType;
+    snprintf(msg.text, MESSAGE_SIZE, "%s", messageText);
+
+    if (msgsnd(msgid, &msg, sizeof(msg.text), 0) == -1) {
+        perror("msgsnd");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Sent message: %s\n", msg.text);
+}
+
+void receive_message(int msgid, long messageType) {
+    struct Message msg;
+
+    if (msgrcv(msgid, &msg, sizeof(msg.text), messageType, 0) == -1) {
+        perror("msgrcv");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Received message: %s\n", msg.text);
+}
+
+int main() {
+    key_t key;
+    int msgid;
+
+    // Generate a key for the message queue
+    if ((key = ftok(".", 'a')) == -1) {
+        perror("ftok");
+        exit(EXIT_FAILURE);
+    }
+
+    // Create or connect to a message queue
+    if ((msgid = msgget(key, IPC_CREAT | 0666)) == -1) {
+        perror("msgget");
+        exit(EXIT_FAILURE);
+    }
+
+    pid_t pid = fork();
+
+    if (pid == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    } else if (pid > 0) {
+        // Parent process (sender)
+        send_message(msgid, "Hello from the sender!", 1);
+    } else {
+        // Child process (receiver)
+        receive_message(msgid, 1);
+    }
+
+    // Remove the message queue
+    if (msgctl(msgid, IPC_RMID, NULL) == -1) {
+        perror("msgctl");
+        exit(EXIT_FAILURE);
+    }
+
+    return 0;
+}
+
+
+****************************************************************************************************************
+#implement IPC using message queue concept. 
+sol.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+
+#define KEY 1234
+#define MESSAGE_SIZE 50
+
+struct Message {
+    long messageType;
+    char text[MESSAGE_SIZE];
+};
+
+int create_message_queue() {
+    int msgid;
+
+    // Generate a key for the message queue
+    key_t key = ftok(".", 'a');
+    if (key == -1) {
+        perror("ftok");
+        exit(EXIT_FAILURE);
+    }
+
+    // Create a message queue or get the ID of an existing one
+    msgid = msgget(key, IPC_CREAT | 0666);
+    if (msgid == -1) {
+        perror("msgget");
+        exit(EXIT_FAILURE);
+    }
+
+    return msgid;
+}
+
+void send_message(int msgid, const char *messageText, long messageType) {
+    struct Message msg;
+    msg.messageType = messageType;
+    snprintf(msg.text, MESSAGE_SIZE, "%s", messageText);
+
+    if (msgsnd(msgid, &msg, sizeof(msg.text), 0) == -1) {
+        perror("msgsnd");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Sent message: %s\n", msg.text);
+}
+
+void receive_message(int msgid, long messageType) {
+    struct Message msg;
+
+    if (msgrcv(msgid, &msg, sizeof(msg.text), messageType, 0) == -1) {
+        perror("msgrcv");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Received message: %s\n", msg.text);
+}
+
+int main() {
+    int msgid = create_message_queue();
+
+    pid_t pid = fork();
+
+    if (pid == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    } else if (pid > 0) {
+        // Parent process (sender)
+        send_message(msgid, "Hello from the sender!", 1);
+    } else {
+        // Child process (receiver)
+        receive_message(msgid, 1);
+    }
+
+    // Remove the message queue
+    if (msgctl(msgid, IPC_RMID, NULL) == -1) {
+        perror("msgctl");
+        exit(EXIT_FAILURE);
+    }
+
+    return 0;
+}
+
+
+
+
+
